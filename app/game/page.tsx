@@ -93,6 +93,54 @@ function buildWordMaps() {
   };
 }
 
+function getAcrossWord(startRow: number, startCol: number, board: string[][]) {
+  let c = startCol;
+  let answer = "";
+
+  while (c < grid[startRow].length && grid[startRow][c] !== "#") {
+    answer += board[startRow][c].toUpperCase();
+    c++;
+  }
+
+  return answer;
+}
+
+function getAcrossSolution(startRow: number, startCol: number) {
+  let c = startCol;
+  let answer = "";
+
+  while (c < grid[startRow].length && grid[startRow][c] !== "#") {
+    answer += grid[startRow][c].toUpperCase();
+    c++;
+  }
+
+  return answer;
+}
+
+function getDownWord(startRow: number, startCol: number, board: string[][]) {
+  let r = startRow;
+  let answer = "";
+
+  while (r < grid.length && grid[r][startCol] !== "#") {
+    answer += board[r][startCol].toUpperCase();
+    r++;
+  }
+
+  return answer;
+}
+
+function getDownSolution(startRow: number, startCol: number) {
+  let r = startRow;
+  let answer = "";
+
+  while (r < grid.length && grid[r][startCol] !== "#") {
+    answer += grid[r][startCol].toUpperCase();
+    r++;
+  }
+
+  return answer;
+}
+
 export default function GamePage() {
   const router = useRouter();
   const [time, setTime] = useState(0);
@@ -102,10 +150,13 @@ export default function GamePage() {
   const [activeCell, setActiveCell] = useState<ActiveCell>(null);
   const [direction, setDirection] = useState<Direction>("across");
 
-  const { acrossIndexMap, downIndexMap, cellNumberMap } = useMemo(
-    () => buildWordMaps(),
-    []
-  );
+  const {
+    acrossStarts,
+    downStarts,
+    acrossIndexMap,
+    downIndexMap,
+    cellNumberMap,
+  } = useMemo(() => buildWordMaps(), []);
 
   const activeAcrossIndex = activeCell
     ? acrossIndexMap.get(`${activeCell.row}-${activeCell.col}`) ?? null
@@ -137,20 +188,27 @@ export default function GamePage() {
   }, []);
 
   async function handleSubmit() {
-    let score = 0;
-    let total = 0;
-
     setSubmitted(true);
     setLoading(true);
 
-    for (let r = 0; r < grid.length; r++) {
-      for (let c = 0; c < grid[r].length; c++) {
-        if (grid[r][c] !== "#") {
-          total++;
-          if (values[r][c].toUpperCase() === grid[r][c].toUpperCase()) {
-            score++;
-          }
-        }
+    let score = 0;
+    const total = acrossStarts.length + downStarts.length;
+
+    for (const start of acrossStarts) {
+      const playerWord = getAcrossWord(start.row, start.col, values);
+      const solutionWord = getAcrossSolution(start.row, start.col);
+
+      if (playerWord === solutionWord) {
+        score++;
+      }
+    }
+
+    for (const start of downStarts) {
+      const playerWord = getDownWord(start.row, start.col, values);
+      const solutionWord = getDownSolution(start.row, start.col);
+
+      if (playerWord === solutionWord) {
+        score++;
       }
     }
 
@@ -207,7 +265,8 @@ export default function GamePage() {
               Ô chữ Giang Hành
             </h1>
             <p className="mt-2 text-sm text-[#7f7f7f] sm:text-base">
-              Chạm vào ô để chọn từ. Trên điện thoại có thể vuốt ngang nếu ô chữ rộng.
+              Chạm vào ô để chọn từ. Trên điện thoại có thể vuốt ngang nếu ô chữ
+              rộng.
             </p>
           </div>
 
