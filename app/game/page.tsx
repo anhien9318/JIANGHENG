@@ -166,6 +166,18 @@ export default function GamePage() {
     ? downIndexMap.get(`${activeCell.row}-${activeCell.col}`) ?? null
     : null;
 
+  const activeClueText =
+    direction === "across"
+      ? activeAcrossIndex !== null
+        ? acrossClues[activeAcrossIndex]
+        : null
+      : activeDownIndex !== null
+      ? downClues[activeDownIndex]
+      : null;
+
+  const activeClueNumber =
+    activeCell ? cellNumberMap.get(`${activeCell.row}-${activeCell.col}`) : null;
+
   useEffect(() => {
     const accessGranted = localStorage.getItem("access_granted");
     const player = localStorage.getItem("player");
@@ -265,8 +277,7 @@ export default function GamePage() {
               Ô chữ Giang Hành
             </h1>
             <p className="mt-2 text-sm text-[#7f7f7f] sm:text-base">
-              Chạm vào ô để chọn từ. Trên điện thoại có thể vuốt ngang nếu ô chữ
-              rộng.
+              Chạm vào ô để chọn từ. Trên điện thoại có thể vuốt ngang nếu ô chữ rộng.
             </p>
           </div>
 
@@ -285,25 +296,45 @@ export default function GamePage() {
         </div>
 
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:gap-8">
-          <div className="min-w-0 flex-1 rounded-[24px] border border-[#cccccc] bg-white/70 p-3 shadow-sm sm:p-4 lg:min-h-[720px] lg:p-6">
-            <CrosswordGrid
-              grid={grid}
-              values={values}
-              setValues={setValues}
-              submitted={submitted}
-              activeCell={activeCell}
-              setActiveCell={setActiveCell}
-              direction={direction}
-              setDirection={setDirection}
-              activeAcrossIndex={activeAcrossIndex}
-              activeDownIndex={activeDownIndex}
-              cellNumberMap={cellNumberMap}
-              acrossIndexMap={acrossIndexMap}
-              downIndexMap={downIndexMap}
-            />
+          <div className="min-w-0 flex-1">
+            <div className="sticky top-2 z-30 mb-4 rounded-2xl border border-[#cccccc] bg-white/95 p-4 shadow-md backdrop-blur sm:p-5">
+              <div className="mb-2 flex items-center gap-2">
+                <span className="rounded-full bg-[#7f7f7f] px-3 py-1 text-xs font-bold text-white">
+                  {direction === "across" ? "Hàng ngang" : "Hàng dọc"}
+                </span>
+
+                {activeClueNumber ? (
+                  <span className="rounded-full border border-[#cccccc] bg-[#f2f2f2] px-3 py-1 text-xs font-bold text-[#7f7f7f]">
+                    Câu {activeClueNumber}
+                  </span>
+                ) : null}
+              </div>
+
+              <p className="text-sm font-semibold leading-6 text-[#333333] sm:text-base">
+                {activeClueText || "Chạm vào một ô để xem câu hỏi ở đây"}
+              </p>
+            </div>
+
+            <div className="rounded-[24px] border border-[#cccccc] bg-white/70 p-3 shadow-sm sm:p-4 lg:min-h-[720px] lg:p-6">
+              <CrosswordGrid
+                grid={grid}
+                values={values}
+                setValues={setValues}
+                submitted={submitted}
+                activeCell={activeCell}
+                setActiveCell={setActiveCell}
+                direction={direction}
+                setDirection={setDirection}
+                activeAcrossIndex={activeAcrossIndex}
+                activeDownIndex={activeDownIndex}
+                cellNumberMap={cellNumberMap}
+                acrossIndexMap={acrossIndexMap}
+                downIndexMap={downIndexMap}
+              />
+            </div>
           </div>
 
-          <div className="w-full xl:w-[420px] xl:shrink-0">
+          <div className="hidden w-full xl:block xl:w-[420px] xl:shrink-0">
             <CluesPanel
               across={acrossClues}
               down={downClues}
