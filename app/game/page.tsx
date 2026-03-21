@@ -176,7 +176,17 @@ export default function GamePage() {
       : null;
 
   const activeClueNumber =
-    activeCell ? cellNumberMap.get(`${activeCell.row}-${activeCell.col}`) : null;
+  direction === "across"
+    ? activeAcrossIndex !== null
+      ? cellNumberMap.get(
+          `${acrossStarts[activeAcrossIndex].row}-${acrossStarts[activeAcrossIndex].col}`
+        ) ?? null
+      : null
+    : activeDownIndex !== null
+    ? cellNumberMap.get(
+        `${downStarts[activeDownIndex].row}-${downStarts[activeDownIndex].col}`
+      ) ?? null
+    : null;
 
   useEffect(() => {
     const accessGranted = localStorage.getItem("access_granted");
