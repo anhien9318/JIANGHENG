@@ -167,26 +167,26 @@ export default function GamePage() {
     : null;
 
   const activeClueText =
-    direction === "across"
-      ? activeAcrossIndex !== null
-        ? acrossClues[activeAcrossIndex]
-        : null
-      : activeDownIndex !== null
-      ? downClues[activeDownIndex]
-      : null;
-
-  const activeClueNumber =
   direction === "across"
     ? activeAcrossIndex !== null
-      ? cellNumberMap.get(
-          `${acrossStarts[activeAcrossIndex].row}-${acrossStarts[activeAcrossIndex].col}`
-        ) ?? null
+      ? acrossClues[activeAcrossIndex]
       : null
     : activeDownIndex !== null
-    ? cellNumberMap.get(
-        `${downStarts[activeDownIndex].row}-${downStarts[activeDownIndex].col}`
-      ) ?? null
+    ? downClues[activeDownIndex]
     : null;
+
+  const activeClueNumber =
+    direction === "across"
+      ? activeAcrossIndex !== null
+        ? cellNumberMap.get(
+            `${acrossStarts[activeAcrossIndex].row}-${acrossStarts[activeAcrossIndex].col}`
+          ) ?? null
+        : null
+      : activeDownIndex !== null
+      ? cellNumberMap.get(
+          `${downStarts[activeDownIndex].row}-${downStarts[activeDownIndex].col}`
+        ) ?? null
+        : null;
 
   useEffect(() => {
     const accessGranted = localStorage.getItem("access_granted");
