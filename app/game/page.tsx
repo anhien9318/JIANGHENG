@@ -179,7 +179,6 @@ export default function GamePage() {
       });
 
       const data = await res.json();
-      console.log("save-result response:", data);
 
       if (!res.ok) {
         alert(data.error || "Không thể lưu kết quả");
@@ -197,55 +196,55 @@ export default function GamePage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-100 via-slate-100 to-zinc-200 px-6 py-8">
-      <div className="mx-auto max-w-[1500px] rounded-[40px] border border-white/70 bg-white/85 p-10 shadow-[0_20px_60px_rgba(0,0,0,0.08)] backdrop-blur-xl">
-        <div className="mb-10 flex items-center justify-between gap-6">
+    <main className="min-h-screen bg-gradient-to-br from-[#f2f2f2] via-[#cccccc] to-[#a5a5a5] px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+      <div className="mx-auto max-w-[1500px] rounded-[28px] border border-[#cccccc] bg-[#f2f2f2]/95 p-4 shadow-[0_20px_60px_rgba(127,127,127,0.18)] backdrop-blur-xl sm:rounded-[32px] sm:p-6 lg:rounded-[40px] lg:p-10">
+        <div className="mb-6 flex flex-col gap-4 lg:mb-10 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="mb-2 inline-block rounded-full bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm">
+            <p className="mb-2 inline-block rounded-full border border-[#cccccc] bg-white px-4 py-2 text-xs font-semibold text-[#7f7f7f] shadow-sm sm:text-sm">
               Changhenngaygap
             </p>
-            <h1 className="text-5xl font-extrabold tracking-tight text-gray-800">
-              Jiang Heng&apos;s Birthday
+            <h1 className="text-2xl font-extrabold tracking-tight text-[#7f7f7f] sm:text-3xl lg:text-5xl">
+              Ô chữ Giang Hành
             </h1>
-            <p className="mt-3 text-base text-gray-500">
-              Bấm vào ô để xem câu hỏi tương ứng
+            <p className="mt-2 text-sm text-[#7f7f7f] sm:text-base">
+              Chạm vào ô để chọn từ. Trên điện thoại có thể vuốt ngang nếu ô chữ rộng.
             </p>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="rounded-2xl border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-600 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="rounded-2xl border border-[#cccccc] bg-white px-4 py-3 text-sm font-semibold text-[#7f7f7f] shadow-sm">
               Đang chọn:{" "}
-              <span className="text-gray-900">
+              <span className="text-black">
                 {direction === "across" ? "Hàng ngang" : "Hàng dọc"}
               </span>
             </div>
 
-            <div className="rounded-2xl bg-gray-700 px-8 py-4 text-2xl font-extrabold text-white shadow-lg transition duration-300 hover:-translate-y-0.5 hover:bg-gray-800">
+            <div className="rounded-2xl bg-[#7f7f7f] px-5 py-3 text-lg font-extrabold text-white shadow-lg sm:px-6 sm:text-xl lg:px-8 lg:py-4 lg:text-2xl">
               ⏱ {time}s
             </div>
           </div>
         </div>
 
-        <div className="flex items-start gap-10">
-          <div className="flex min-h-[720px] flex-1 items-center justify-center p-4">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:gap-8">
+          <div className="min-w-0 flex-1 rounded-[24px] border border-[#cccccc] bg-white/70 p-3 shadow-sm sm:p-4 lg:min-h-[720px] lg:p-6">
             <CrosswordGrid
-                grid={grid}
-                values={values}
-                setValues={setValues}
-                submitted={submitted}
-                activeCell={activeCell}
-                setActiveCell={setActiveCell}
-                direction={direction}
-                setDirection={setDirection}
-                activeAcrossIndex={activeAcrossIndex}
-                activeDownIndex={activeDownIndex}
-                cellNumberMap={cellNumberMap}
-                acrossIndexMap={acrossIndexMap}
-                downIndexMap={downIndexMap}
+              grid={grid}
+              values={values}
+              setValues={setValues}
+              submitted={submitted}
+              activeCell={activeCell}
+              setActiveCell={setActiveCell}
+              direction={direction}
+              setDirection={setDirection}
+              activeAcrossIndex={activeAcrossIndex}
+              activeDownIndex={activeDownIndex}
+              cellNumberMap={cellNumberMap}
+              acrossIndexMap={acrossIndexMap}
+              downIndexMap={downIndexMap}
             />
-        </div>
+          </div>
 
-          <div className="w-[420px]">
+          <div className="w-full xl:w-[420px] xl:shrink-0">
             <CluesPanel
               across={acrossClues}
               down={downClues}
@@ -256,11 +255,11 @@ export default function GamePage() {
           </div>
         </div>
 
-        <div className="mt-10 flex justify-center">
+        <div className="mt-6 flex justify-center lg:mt-10">
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="rounded-3xl bg-gray-700 px-10 py-5 text-xl font-bold text-white shadow-lg transition-all duration-200 hover:-translate-y-1 hover:bg-gray-800 hover:shadow-xl disabled:opacity-50"
+            className="w-full rounded-2xl bg-[#7f7f7f] px-6 py-4 text-lg font-bold text-white shadow-lg transition-all duration-200 hover:-translate-y-1 hover:bg-[#6f6f6f] hover:shadow-xl disabled:opacity-50 sm:w-auto sm:px-10 sm:text-xl"
           >
             {loading ? "Đang lưu..." : "Nộp bài"}
           </button>

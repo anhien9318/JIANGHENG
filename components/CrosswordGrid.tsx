@@ -173,83 +173,91 @@ export default function CrosswordGrid({
     const isInSecondaryWord = direction === "across" ? isInDown : isInAcross;
 
     const base =
-      "relative flex h-[64px] w-[64px] items-center justify-center rounded-2xl border text-center text-2xl font-bold uppercase outline-none transition-all duration-200 md:h-[72px] md:w-[72px]";
+      "relative flex h-9 w-9 items-center justify-center rounded-lg border text-center text-sm font-bold uppercase outline-none transition-all duration-200 sm:h-10 sm:w-10 sm:text-base md:h-12 md:w-12 md:rounded-xl md:text-lg lg:h-14 lg:w-14 lg:text-xl";
 
     if (isActive) {
-      return `${base} z-20 scale-105 border-emerald-500 bg-white shadow-[0_10px_25px_rgba(16,185,129,0.25)] ring-4 ring-emerald-100`;
+      return `${base} z-20 scale-105 border-[#7f7f7f] bg-white text-black shadow-[0_10px_24px_rgba(0,0,0,0.12)] ring-2 ring-[#cccccc]`;
     }
 
     if (isInPrimaryWord) {
-      return `${base} border-emerald-200 bg-emerald-50 shadow-sm`;
+      return `${base} border-[#a5a5a5] bg-[#e9e9e9] text-black shadow-sm`;
     }
 
     if (isInSecondaryWord) {
-      return `${base} border-green-100 bg-green-50/80`;
+      return `${base} border-[#cccccc] bg-[#f6f6f6] text-[#333333]`;
     }
 
-    return `${base} border-gray-200 bg-white hover:-translate-y-[2px] hover:shadow-sm`;
+    return `${base} border-[#cccccc] bg-white text-black hover:-translate-y-[1px] hover:shadow-sm`;
   }
 
   return (
-    <div
-      className="grid gap-3 md:gap-4"
-      style={{
-        gridTemplateColumns: `repeat(${grid[0].length}, minmax(0, max-content))`,
-      }}
-    >
-      {grid.map((row, r) =>
-        row.map((cell, c) => {
-          const key = `${r}-${c}`;
+    <div className="w-full overflow-x-auto pb-2">
+      <div
+        className="mx-auto grid w-max gap-1.5 sm:gap-2 md:gap-2.5"
+        style={{
+          gridTemplateColumns: `repeat(${grid[0].length}, minmax(0, max-content))`,
+        }}
+      >
+        {grid.map((row, r) =>
+          row.map((cell, c) => {
+            const key = `${r}-${c}`;
 
-          if (cell === "#") {
+            if (cell === "#") {
+              return (
+                <div
+                  key={key}
+                  className="h-9 w-9 sm:h-10 sm:w-10 md:h-12 md:w-12 lg:h-14 lg:w-14"
+                />
+              );
+            }
+
+            const clueNumber = cellNumberMap.get(key);
+
+            const isCorrect =
+              submitted &&
+              values[r][c].toUpperCase() === grid[r][c].toUpperCase();
+
+            const isWrong =
+              submitted &&
+              values[r][c] &&
+              values[r][c].toUpperCase() !== grid[r][c].toUpperCase();
+
             return (
-              <div
-                key={key}
-                className="h-[64px] w-[64px] md:h-[72px] md:w-[72px]"
-              />
+              <div key={key} className="relative">
+                {clueNumber && (
+                  <span className="pointer-events-none absolute left-1 top-0.5 z-10 text-[8px] font-bold text-[#666] sm:left-1.5 sm:top-1 sm:text-[9px] md:text-[10px]">
+                    {clueNumber}
+                  </span>
+                )}
+
+                <input
+                  id={`cell-${r}-${c}`}
+                  maxLength={1}
+                  inputMode="text"
+                  autoCapitalize="characters"
+                  value={values[r][c]}
+                  onFocus={() => setActiveCell({ row: r, col: c })}
+                  onClick={() => focusCell(r, c)}
+                  onChange={(e) => {
+                    updateCell(r, c, e.target.value);
+                    if (e.target.value) moveToNextCell(r, c);
+                  }}
+                  onKeyDown={(e) => handleKeyDown(e, r, c)}
+                  className={`${getCellClass(r, c)} ${
+                    isCorrect
+                      ? "!border-[#4f4f4f] !bg-[#d1ffd6] !text-black"
+                      : ""
+                  } ${
+                    isWrong
+                      ? "!border-[#999999] !bg-[#ffe3e3] !text-black"
+                      : ""
+                  }`}
+                />
+              </div>
             );
-          }
-
-          const clueNumber = cellNumberMap.get(key);
-
-          const isCorrect =
-            submitted &&
-            values[r][c].toUpperCase() === grid[r][c].toUpperCase();
-
-          const isWrong =
-            submitted &&
-            values[r][c] &&
-            values[r][c].toUpperCase() !== grid[r][c].toUpperCase();
-
-          return (
-            <div key={key} className="relative">
-              {clueNumber ? (
-                <span className="pointer-events-none absolute left-2 top-1.5 z-10 text-[11px] font-bold text-gray-400">
-                  {clueNumber}
-                </span>
-              ) : null}
-
-              <input
-                id={`cell-${r}-${c}`}
-                maxLength={1}
-                value={values[r][c]}
-                onFocus={() => setActiveCell({ row: r, col: c })}
-                onClick={() => focusCell(r, c)}
-                onChange={(e) => {
-                  updateCell(r, c, e.target.value);
-                  if (e.target.value) {
-                    moveToNextCell(r, c);
-                  }
-                }}
-                onKeyDown={(e) => handleKeyDown(e, r, c)}
-                className={`${getCellClass(r, c)} ${
-                  isCorrect ? "!border-green-400 !bg-green-100 !text-green-700" : ""
-                } ${isWrong ? "!border-red-300 !bg-red-50 !text-red-700" : ""}`}
-              />
-            </div>
-          );
-        })
-      )}
+          })
+        )}
+      </div>
     </div>
   );
 }
