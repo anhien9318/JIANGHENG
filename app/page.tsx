@@ -260,7 +260,7 @@ export default function AccessPage() {
                 <img
                   src="/3.png"
                   alt="rabbit"
-                  className={`w-[480px] sm:w-[560px] object-contain drop-shadow-2xl ${
+                  className={`w-[200px] sm:w-[560px] object-contain drop-shadow-2xl ${
                     progress >= 80 ? "rabbit-scared" : ""
                   }`}
                 />
@@ -283,7 +283,7 @@ export default function AccessPage() {
                 <img
                   src="/2.png"
                   alt="wolf"
-                  className={`w-[300px] sm:w-[360px] object-contain drop-shadow-2xl ${
+                  className={`w-[200px] sm:w-[360px] object-contain drop-shadow-2xl ${
                     progress < 96 ? "wolf-run" : "wolf-stop"
                   }`}
                 />
