@@ -80,7 +80,7 @@ export const downClues: CrosswordClue[] = [
   },
   {
     number: 3,
-    text: "Giang Hành thích được gọi bằng biệt danh nào?",
+    text: "Giang Hành bao nhiêu tuổi?",
     answer: "BAMOT",
     direction: "down",
     row: 4,
@@ -88,7 +88,7 @@ export const downClues: CrosswordClue[] = [
   },
   {
     number: 5,
-    text: "Giang Hành bao nhiêu tuổi?",
+    text: "Quê của Giang Hành ở đâu?",
     answer: "ANHUY",
     direction: "down",
     row: 6,
@@ -96,7 +96,7 @@ export const downClues: CrosswordClue[] = [
   },
   {
     number: 8,
-    text: "Tên thật của Giang Hành?",
+    text: "Giang Hành thích được gọi bằng biệt danh nào?",
     answer: "PHUTHANH",
     direction: "down",
     row: 1,
@@ -104,7 +104,7 @@ export const downClues: CrosswordClue[] = [
   },
   {
     number: 9,
-    text: "Quê của Giang Hành ở đâu?",
+    text: "Tên thật của Giang Hành?",
     answer: "HUAVIKIEN",
     direction: "down",
     row: 5,
