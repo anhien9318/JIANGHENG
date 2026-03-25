@@ -8,21 +8,78 @@ type ResultData = {
   time: number;
 };
 
+type PlayerData = {
+  facebookName: string;
+  facebookLink: string;
+  receiverName: string;
+  phone: string;
+  address: string;
+};
+
 export default function ResultPage() {
   const [result, setResult] = useState<ResultData | null>(null);
+  const [savedToDb, setSavedToDb] = useState(false);
 
   useEffect(() => {
     const accessGranted = localStorage.getItem("access_granted");
     const savedResult = localStorage.getItem("result");
+    const savedPlayer = localStorage.getItem("player");
 
     if (accessGranted !== "true") {
       window.location.href = "/";
       return;
     }
 
-    if (savedResult) {
-      setResult(JSON.parse(savedResult));
+    if (!savedResult) return;
+
+    const parsedResult: ResultData = JSON.parse(savedResult);
+    setResult(parsedResult);
+
+    if (!savedPlayer) return;
+
+    const parsedPlayer: PlayerData = JSON.parse(savedPlayer);
+
+    const alreadySaved = sessionStorage.getItem("result_saved");
+
+    if (alreadySaved === "true") {
+      setSavedToDb(true);
+      return;
     }
+
+    async function saveResult() {
+      try {
+        const res = await fetch("/api/save-result", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            facebookName: parsedPlayer.facebookName,
+            facebookLink: parsedPlayer.facebookLink,
+            receiverName: parsedPlayer.receiverName,
+            phone: parsedPlayer.phone,
+            address: parsedPlayer.address,
+            score: parsedResult.score,
+            total: parsedResult.total,
+            time: parsedResult.time,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          console.error("Save result failed:", data);
+          return;
+        }
+
+        sessionStorage.setItem("result_saved", "true");
+        setSavedToDb(true);
+      } catch (error) {
+        console.error("Save result error:", error);
+      }
+    }
+
+    saveResult();
   }, []);
 
   function formatTime(seconds: number) {
@@ -71,11 +128,16 @@ export default function ResultPage() {
               </p>
             </div>
 
+            <p className="text-sm text-[#538d22]">
+              {savedToDb ? "Đã lưu kết quả thành công." : "Đang lưu kết quả..."}
+            </p>
+
             <button
               onClick={() => {
                 localStorage.removeItem("access_granted");
                 localStorage.removeItem("player");
                 localStorage.removeItem("result");
+                sessionStorage.removeItem("result_saved");
                 window.location.href = "/";
               }}
               className="inline-block rounded-2xl bg-gradient-to-r from-[#73a942] to-[#538d22] px-8 py-4 text-xl font-bold text-white shadow-[0_12px_24px_rgba(83,141,34,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_30px_rgba(83,141,34,0.35)]"
