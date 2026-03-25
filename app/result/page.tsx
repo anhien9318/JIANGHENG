@@ -115,7 +115,7 @@ export default function ResultPage() {
           <div className="space-y-6">
             <div className="rounded-3xl border border-[#dde5b6] bg-[#fffef8] p-7 shadow-sm">
               <p className="text-3xl font-bold text-[#245501]">
-                Bạn đã hoàn thành câu hỏi
+                yah~ xong rồi đó 
               </p>
             </div>
 
