@@ -175,7 +175,7 @@ export default function AccessPage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="mb-2 block text-sm font-semibold text-[#538d22]">
-              Mã truy cập
+              Mã truy cập : hanhan99
             </label>
 
             <input
