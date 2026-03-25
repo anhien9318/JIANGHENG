@@ -32,7 +32,10 @@ function getCellsForClue(clue: CrosswordClue) {
   });
 }
 
-function sameCell(a: { row: number; col: number }, b: { row: number; col: number }) {
+function sameCell(
+  a: { row: number; col: number },
+  b: { row: number; col: number }
+) {
   return a.row === b.row && a.col === b.col;
 }
 
@@ -86,7 +89,11 @@ export default function CrosswordGrid({
 
     const nextClue =
       findClueByCellAndDirection(row, col, direction) ||
-      findClueByCellAndDirection(row, col, direction === "across" ? "down" : "across");
+      findClueByCellAndDirection(
+        row,
+        col,
+        direction === "across" ? "down" : "across"
+      );
 
     if (nextClue) {
       setActiveClue(nextClue);
@@ -239,67 +246,73 @@ export default function CrosswordGrid({
   }
 
   return (
-    <div className="flex justify-center overflow-x-auto">
-      <div
-        className="grid gap-[4px]"
-        style={{
-          gridTemplateColumns: `repeat(${grid[0].length}, minmax(0, 1fr))`,
-        }}
-      >
-        {grid.map((row, rowIndex) =>
-          row.map((cell, colIndex) => {
-            const blocked = isBlocked(cell);
-            const isActive =
-              activeCell?.row === rowIndex && activeCell?.col === colIndex;
+    <div className="w-full overflow-x-auto">
+      <div className="flex min-w-max justify-center px-1 sm:px-0">
+        <div
+          className="grid gap-[2px] sm:gap-[3px] md:gap-[4px]"
+          style={{
+            gridTemplateColumns: `repeat(${grid[0].length}, minmax(0, 1fr))`,
+          }}
+        >
+          {grid.map((row, rowIndex) =>
+            row.map((cell, colIndex) => {
+              const blocked = isBlocked(cell);
+              const isActive =
+                activeCell?.row === rowIndex && activeCell?.col === colIndex;
 
-            const isInActiveWord = activeCells.some((item) =>
-              sameCell(item, { row: rowIndex, col: colIndex })
-            );
-
-            const cellNumber = numberMap.get(`${rowIndex}-${colIndex}`);
-            const key = `${rowIndex}-${colIndex}`;
-
-            if (blocked) {
-              return (
-                <div
-                  key={key}
-                  className="h-11 w-11 rounded-[10px] bg-transparent sm:h-12 sm:w-12"
-                />
+              const isInActiveWord = activeCells.some((item) =>
+                sameCell(item, { row: rowIndex, col: colIndex })
               );
-            }
 
-            return (
-              <div key={key} className="relative">
-                {cellNumber && (
-                  <span className="pointer-events-none absolute left-1 top-1 z-10 text-[10px] font-extrabold leading-none text-[#6f8f35] sm:text-[11px]">
-                    {cellNumber}
-                  </span>
-                )}
+              const cellNumber = numberMap.get(`${rowIndex}-${colIndex}`);
+              const key = `${rowIndex}-${colIndex}`;
 
-                <input
-                  ref={(el) => {
-                    inputRefs.current[key] = el;
-                  }}
-                  value={userGrid[rowIndex][colIndex]}
-                  onClick={() => handleCellClick(rowIndex, colIndex)}
-                  onFocus={() => focusCell(rowIndex, colIndex)}
-                  onChange={(e) =>
-                    handleChange(rowIndex, colIndex, e.target.value)
-                  }
-                  onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex)}
-                  maxLength={1}
-                  className={`h-11 w-11 rounded-[10px] border-[2.5px] text-center text-base font-black uppercase outline-none transition sm:h-12 sm:w-12 sm:text-lg ${
-                    isActive
-                      ? "border-[#4f7f1d] bg-[#edf7cf] text-[#1f3f00] shadow-[0_0_0_2px_rgba(170,213,118,0.35)]"
-                      : isInActiveWord
-                      ? "border-[#90b84f] bg-[#f7fbe9] text-[#245501]"
-                      : "border-[#7ea63e] bg-white text-[#245501]"
-                  }`}
-                />
-              </div>
-            );
-          })
-        )}
+              if (blocked) {
+                return (
+                  <div
+                    key={key}
+                    className="h-8 w-8 rounded-[8px] bg-transparent xs:h-9 xs:w-9 sm:h-10 sm:w-10 md:h-11 md:w-11 lg:h-12 lg:w-12"
+                  />
+                );
+              }
+
+              return (
+                <div key={key} className="relative">
+                  {cellNumber && (
+                    <span className="pointer-events-none absolute left-[3px] top-[3px] z-10 text-[8px] font-extrabold leading-none text-[#6f8f35] xs:text-[9px] sm:left-1 sm:top-1 sm:text-[10px] md:text-[11px]">
+                      {cellNumber}
+                    </span>
+                  )}
+
+                  <input
+                    ref={(el) => {
+                      inputRefs.current[key] = el;
+                    }}
+                    value={userGrid[rowIndex][colIndex]}
+                    onClick={() => handleCellClick(rowIndex, colIndex)}
+                    onFocus={() => focusCell(rowIndex, colIndex)}
+                    onChange={(e) =>
+                      handleChange(rowIndex, colIndex, e.target.value)
+                    }
+                    onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex)}
+                    maxLength={1}
+                    className={`h-8 w-8 rounded-[8px] border-[2px] text-center text-[13px] font-black uppercase outline-none transition xs:h-9 xs:w-9 xs:text-sm sm:h-10 sm:w-10 sm:rounded-[9px] sm:text-base md:h-11 md:w-11 md:rounded-[10px] md:border-[2.5px] md:text-base lg:h-12 lg:w-12 lg:text-lg ${
+                      isActive
+                        ? "border-[#4f7f1d] bg-[#edf7cf] text-[#1f3f00] shadow-[0_0_0_2px_rgba(170,213,118,0.35)]"
+                        : isInActiveWord
+                        ? "border-[#90b84f] bg-[#f7fbe9] text-[#245501]"
+                        : "border-[#7ea63e] bg-white text-[#245501]"
+                    }`}
+                    inputMode="text"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                  />
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
     </div>
   );
