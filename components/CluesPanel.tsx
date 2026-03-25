@@ -1,116 +1,50 @@
+"use client";
+
+import type { CrosswordClue } from "@/data/crossword";
+
 type Props = {
-  across: string[];
-  down: string[];
-  activeAcrossIndex: number | null;
-  activeDownIndex: number | null;
-  direction: "across" | "down";
+  title: string;
+  clues: CrosswordClue[];
+  activeClueNumber: number | null;
+  onSelectClue: (clue: CrosswordClue) => void;
 };
 
-function ClueItem({
-  clue,
-  index,
-  active,
-}: {
-  clue: string;
-  index: number;
-  active: boolean;
-}) {
-  return (
-    <li
-      className={`rounded-2xl border px-4 py-3 transition-all duration-200 ${
-        active
-          ? "scale-[1.02] border-[#a5a5a5] bg-[#f2f2f2] shadow-md"
-          : "border-transparent bg-transparent hover:border-[#cccccc] hover:bg-white/80"
-      }`}
-    >
-      <div className="flex items-start gap-3">
-        <div
-          className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-extrabold ${
-            active
-              ? "bg-[#7f7f7f] text-white shadow-md"
-              : "bg-[#cccccc] text-[#7f7f7f]"
-          }`}
-        >
-          {index + 1}
-        </div>
-
-        <p
-          className={`text-[15px] leading-7 ${
-            active ? "font-semibold text-[#7f7f7f]" : "text-[#7f7f7f]"
-          }`}
-        >
-          {clue}
-        </p>
-      </div>
-    </li>
-  );
-}
-
 export default function CluesPanel({
-  across,
-  down,
-  activeAcrossIndex,
-  activeDownIndex,
-  direction,
+  title,
+  clues,
+  activeClueNumber,
+  onSelectClue,
 }: Props) {
   return (
-    <div className="space-y-8 text-[#7f7f7f]">
-      <div className="rounded-[28px] border border-[#cccccc] bg-[#f2f2f2]/90 p-7 shadow-[0_10px_30px_rgba(127,127,127,0.08)] backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(127,127,127,0.12)]">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-[#7f7f7f]">
-            Câu hỏi hàng ngang
-          </h2>
-
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-bold ${
-              direction === "across"
-                ? "bg-[#cccccc] text-[#7f7f7f]"
-                : "bg-white text-[#a5a5a5]"
-            }`}
-          >
-            {direction === "across" ? "Đang chọn" : "Phụ"}
-          </span>
-        </div>
-
-        <ul className="space-y-3">
-          {across.map((clue, index) => (
-            <ClueItem
-              key={index}
-              clue={clue}
-              index={index}
-              active={index === activeAcrossIndex}
-            />
-          ))}
-        </ul>
+    <div className="rounded-[28px] border border-[#dde5b6] bg-white/85 p-4 shadow-[0_10px_30px_rgba(36,85,1,0.08)] backdrop-blur">
+      <div className="mb-4 flex items-center gap-2">
+        <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-[#f0ead2] px-3 text-sm font-bold text-[#538d22]">
+          {title}
+        </span>
       </div>
 
-      <div className="rounded-[28px] border border-[#cccccc] bg-[#f2f2f2]/90 p-7 shadow-[0_10px_30px_rgba(127,127,127,0.08)] backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(127,127,127,0.12)]">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-[#7f7f7f]">
-            Câu hỏi hàng dọc
-          </h2>
+      <div className="space-y-2">
+        {clues.map((clue) => {
+          const isActive = activeClueNumber === clue.number;
 
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-bold ${
-              direction === "down"
-                ? "bg-[#cccccc] text-[#7f7f7f]"
-                : "bg-white text-[#a5a5a5]"
-            }`}
-          >
-            {direction === "down" ? "Đang chọn" : "Phụ"}
-          </span>
-        </div>
-
-        <ul className="space-y-3">
-          {down.map((clue, index) => (
-            <ClueItem
-              key={index}
-              clue={clue}
-              index={index}
-              active={index === activeDownIndex}
-            />
-          ))}
-        </ul>
+          return (
+            <button
+              key={`${clue.direction}-${clue.number}`}
+              type="button"
+              onClick={() => onSelectClue(clue)}
+              className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
+                isActive
+                  ? "border-[#73a942] bg-[#eef7db] shadow-sm"
+                  : "border-[#edf1dd] bg-[#fdfcf7] hover:border-[#c9d99b] hover:bg-[#f8faef]"
+              }`}
+            >
+              <div className="mb-1 text-sm font-extrabold text-[#538d22]">
+                Câu {clue.number}
+              </div>
+              <div className="text-sm leading-6 text-[#245501]">{clue.text}</div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

@@ -4,365 +4,213 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import CrosswordGrid from "@/components/CrosswordGrid";
 import CluesPanel from "@/components/CluesPanel";
-import { grid, acrossClues, downClues } from "@/data/crossword";
+import {
+  acrossClues,
+  downClues,
+  allClues,
+  type CrosswordClue,
+  type Direction,
+  grid,
+} from "@/data/crossword";
 
-function createEmptyGrid() {
+function createEmptyUserGrid() {
   return grid.map((row) => row.map((cell) => (cell === "#" ? "#" : "")));
 }
 
-type Direction = "across" | "down";
-type ActiveCell = { row: number; col: number } | null;
-
-function isBlocked(row: number, col: number) {
-  return !grid[row] || grid[row][col] === "#";
-}
-
-function isAcrossStart(row: number, col: number) {
-  if (isBlocked(row, col)) return false;
-  const leftBlocked = col === 0 || grid[row][col - 1] === "#";
-  const rightOpen = col + 1 < grid[row].length && grid[row][col + 1] !== "#";
-  return leftBlocked && rightOpen;
-}
-
-function isDownStart(row: number, col: number) {
-  if (isBlocked(row, col)) return false;
-  const topBlocked = row === 0 || grid[row - 1][col] === "#";
-  const bottomOpen = row + 1 < grid.length && grid[row + 1][col] !== "#";
-  return topBlocked && bottomOpen;
-}
-
-function buildWordMaps() {
-  const acrossStarts: { row: number; col: number }[] = [];
-  const downStarts: { row: number; col: number }[] = [];
-
-  const acrossIndexMap = new Map<string, number>();
-  const downIndexMap = new Map<string, number>();
-  const cellNumberMap = new Map<string, number>();
-
-  let clueNumber = 1;
-  let acrossIndex = 0;
-  let downIndex = 0;
-
-  for (let r = 0; r < grid.length; r++) {
-    for (let c = 0; c < grid[r].length; c++) {
-      if (grid[r][c] === "#") continue;
-
-      const acrossStart = isAcrossStart(r, c);
-      const downStart = isDownStart(r, c);
-
-      if (acrossStart || downStart) {
-        cellNumberMap.set(`${r}-${c}`, clueNumber);
-      }
-
-      if (acrossStart) {
-        acrossStarts.push({ row: r, col: c });
-
-        let cc = c;
-        while (cc < grid[r].length && grid[r][cc] !== "#") {
-          acrossIndexMap.set(`${r}-${cc}`, acrossIndex);
-          cc++;
-        }
-
-        acrossIndex++;
-      }
-
-      if (downStart) {
-        downStarts.push({ row: r, col: c });
-
-        let rr = r;
-        while (rr < grid.length && grid[rr][c] !== "#") {
-          downIndexMap.set(`${rr}-${c}`, downIndex);
-          rr++;
-        }
-
-        downIndex++;
-      }
-
-      if (acrossStart || downStart) {
-        clueNumber++;
-      }
-    }
-  }
-
-  return {
-    acrossStarts,
-    downStarts,
-    acrossIndexMap,
-    downIndexMap,
-    cellNumberMap,
-  };
-}
-
-function getAcrossWord(startRow: number, startCol: number, board: string[][]) {
-  let c = startCol;
-  let answer = "";
-
-  while (c < grid[startRow].length && grid[startRow][c] !== "#") {
-    answer += board[startRow][c].toUpperCase();
-    c++;
-  }
-
-  return answer;
-}
-
-function getAcrossSolution(startRow: number, startCol: number) {
-  let c = startCol;
-  let answer = "";
-
-  while (c < grid[startRow].length && grid[startRow][c] !== "#") {
-    answer += grid[startRow][c].toUpperCase();
-    c++;
-  }
-
-  return answer;
-}
-
-function getDownWord(startRow: number, startCol: number, board: string[][]) {
-  let r = startRow;
-  let answer = "";
-
-  while (r < grid.length && grid[r][startCol] !== "#") {
-    answer += board[r][startCol].toUpperCase();
-    r++;
-  }
-
-  return answer;
-}
-
-function getDownSolution(startRow: number, startCol: number) {
-  let r = startRow;
-  let answer = "";
-
-  while (r < grid.length && grid[r][startCol] !== "#") {
-    answer += grid[r][startCol].toUpperCase();
-    r++;
-  }
-
-  return answer;
+function getWordFromUserGrid(
+  userGrid: string[][],
+  clue: CrosswordClue
+): string {
+  return clue.answer
+    .split("")
+    .map((_, index) => {
+      const row = clue.direction === "across" ? clue.row : clue.row + index;
+      const col = clue.direction === "across" ? clue.col + index : clue.col;
+      return userGrid[row][col] || "";
+    })
+    .join("");
 }
 
 export default function GamePage() {
   const router = useRouter();
-  const [time, setTime] = useState(0);
-  const [values, setValues] = useState<string[][]>(createEmptyGrid());
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [activeCell, setActiveCell] = useState<ActiveCell>(null);
+  const [userGrid, setUserGrid] = useState<string[][]>(createEmptyUserGrid);
+  const [activeCell, setActiveCell] = useState<{ row: number; col: number } | null>(
+    null
+  );
   const [direction, setDirection] = useState<Direction>("across");
-
-  const {
-    acrossStarts,
-    downStarts,
-    acrossIndexMap,
-    downIndexMap,
-    cellNumberMap,
-  } = useMemo(() => buildWordMaps(), []);
-
-  const activeAcrossIndex = activeCell
-    ? acrossIndexMap.get(`${activeCell.row}-${activeCell.col}`) ?? null
-    : null;
-
-  const activeDownIndex = activeCell
-    ? downIndexMap.get(`${activeCell.row}-${activeCell.col}`) ?? null
-    : null;
-
-  const activeClueText =
-  direction === "across"
-    ? activeAcrossIndex !== null
-      ? acrossClues[activeAcrossIndex]
-      : null
-    : activeDownIndex !== null
-    ? downClues[activeDownIndex]
-    : null;
-
-  const activeClueNumber =
-    direction === "across"
-      ? activeAcrossIndex !== null
-        ? cellNumberMap.get(
-            `${acrossStarts[activeAcrossIndex].row}-${acrossStarts[activeAcrossIndex].col}`
-          ) ?? null
-        : null
-      : activeDownIndex !== null
-      ? cellNumberMap.get(
-          `${downStarts[activeDownIndex].row}-${downStarts[activeDownIndex].col}`
-        ) ?? null
-        : null;
+  const [activeClue, setActiveClue] = useState<CrosswordClue | null>(acrossClues[0]);
+  const [time, setTime] = useState(0);
 
   useEffect(() => {
-    const accessGranted = localStorage.getItem("access_granted");
     const player = localStorage.getItem("player");
-
-    if (accessGranted !== "true") {
-      window.location.href = "/";
-      return;
-    }
-
     if (!player) {
-      window.location.href = "/register";
-      return;
+      router.push("/register");
     }
+  }, [router]);
 
-    const interval = setInterval(() => {
-      setTime((t) => t + 1);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime((prev) => prev + 1);
     }, 1000);
 
-    return () => clearInterval(interval);
+    return () => clearInterval(timer);
   }, []);
 
-  async function handleSubmit() {
-    setSubmitted(true);
-    setLoading(true);
+  useEffect(() => {
+    if (activeClue) {
+      setDirection(activeClue.direction);
+      setActiveCell({ row: activeClue.row, col: activeClue.col });
+    }
+  }, [activeClue]);
 
+  const currentAnswerPreview = useMemo(() => {
+    if (!activeClue) return "";
+    return getWordFromUserGrid(userGrid, activeClue);
+  }, [userGrid, activeClue]);
+
+  function formatTime(totalSeconds: number) {
+    const min = Math.floor(totalSeconds / 60);
+    const sec = totalSeconds % 60;
+    return `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+  }
+
+  function handleSelectClue(clue: CrosswordClue) {
+    setActiveClue(clue);
+    setDirection(clue.direction);
+    setActiveCell({ row: clue.row, col: clue.col });
+  }
+
+  function handleSubmit() {
     let score = 0;
-    const total = acrossStarts.length + downStarts.length;
 
-    for (const start of acrossStarts) {
-      const playerWord = getAcrossWord(start.row, start.col, values);
-      const solutionWord = getAcrossSolution(start.row, start.col);
+    const detail = allClues.map((clue) => {
+      const userAnswer = getWordFromUserGrid(userGrid, clue);
+      const correct = userAnswer === clue.answer;
 
-      if (playerWord === solutionWord) {
-        score++;
-      }
-    }
+      if (correct) score += 1;
 
-    for (const start of downStarts) {
-      const playerWord = getDownWord(start.row, start.col, values);
-      const solutionWord = getDownSolution(start.row, start.col);
+      return {
+        number: clue.number,
+        direction: clue.direction,
+        clue: clue.text,
+        userAnswer,
+        correctAnswer: clue.answer,
+        correct,
+      };
+    });
 
-      if (playerWord === solutionWord) {
-        score++;
-      }
-    }
+    localStorage.setItem(
+      "result",
+      JSON.stringify({
+        score,
+        total: allClues.length,
+        time,
+        detail,
+      })
+    );
 
-    const currentPlayer = JSON.parse(localStorage.getItem("player") || "{}");
-
-    const resultPayload = {
-      facebookName: currentPlayer.facebookName || "",
-      facebookLink: currentPlayer.facebookLink || "",
-      receiverName: currentPlayer.receiverName || "",
-      phone: currentPlayer.phone || "",
-      address: currentPlayer.address || "",
-      score,
-      total,
-      time,
-    };
-
-    localStorage.setItem("result", JSON.stringify(resultPayload));
-
-    try {
-      const res = await fetch("/api/save-result", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(resultPayload),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.error || "Không thể lưu kết quả");
-        setLoading(false);
-        return;
-      }
-
-      router.push("/result");
-    } catch (error) {
-      console.error("Submit error:", error);
-      alert("Lỗi kết nối khi lưu kết quả");
-    } finally {
-      setLoading(false);
-    }
+    router.push("/result");
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#f2f2f2] via-[#cccccc] to-[#a5a5a5] px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-      <div className="mx-auto max-w-[1500px] rounded-[28px] border border-[#cccccc] bg-[#f2f2f2]/95 p-4 shadow-[0_20px_60px_rgba(127,127,127,0.18)] backdrop-blur-xl sm:rounded-[32px] sm:p-6 lg:rounded-[40px] lg:p-10">
-        <div className="mb-6 flex flex-col gap-4 lg:mb-10 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="mb-2 inline-block rounded-full border border-[#cccccc] bg-white px-4 py-2 text-xs font-semibold text-[#7f7f7f] shadow-sm sm:text-sm">
-              Changhenngaygap
-            </p>
-            <h1 className="text-2xl font-extrabold tracking-tight text-[#7f7f7f] sm:text-3xl lg:text-5xl">
-              Ô chữ Giang Hành
-            </h1>
-            <p className="mt-2 text-sm text-[#7f7f7f] sm:text-base">
-              Chạm vào ô để chọn từ. Trên điện thoại có thể vuốt ngang nếu ô chữ rộng.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="rounded-2xl border border-[#cccccc] bg-white px-4 py-3 text-sm font-semibold text-[#7f7f7f] shadow-sm">
-              Đang chọn:{" "}
-              <span className="text-black">
-                {direction === "across" ? "Hàng ngang" : "Hàng dọc"}
-              </span>
+    <main className="min-h-screen bg-gradient-to-br from-[#f0ead2] via-[#eef4d4] to-[#dde5b6] px-4 py-4 sm:px-6 sm:py-6">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-5 rounded-[28px] border border-[#dde5b6] bg-white/80 p-4 shadow-[0_12px_32px_rgba(36,85,1,0.08)] backdrop-blur sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <div className="mb-2 inline-flex rounded-full border border-[#dde5b6] bg-[#f0ead2] px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-[#538d22] sm:text-sm">
+                changhenngaygap
+              </div>
+              <h1 className="text-2xl font-extrabold text-[#245501] sm:text-3xl">
+                Crossword Game
+              </h1>
+              <p className="mt-1 text-sm text-[#538d22] sm:text-base">
+                Chạm vào ô hoặc chọn câu hỏi để điền đáp án
+              </p>
             </div>
 
-            <div className="rounded-2xl bg-[#7f7f7f] px-5 py-3 text-lg font-extrabold text-white shadow-lg sm:px-6 sm:text-xl lg:px-8 lg:py-4 lg:text-2xl">
-              ⏱ {time}s
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="rounded-2xl border border-[#dde5b6] bg-[#fdfcf7] px-4 py-3 text-sm font-bold text-[#245501]">
+                ⏱ {formatTime(time)}
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setDirection((prev) => (prev === "across" ? "down" : "across"))
+                }
+                className="rounded-2xl border border-[#cfe19a] bg-[#f3f9e4] px-4 py-3 text-sm font-bold text-[#538d22] transition hover:-translate-y-0.5"
+              >
+                Đổi hướng: {direction === "across" ? "Ngang" : "Dọc"}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSubmit}
+                className="rounded-2xl bg-gradient-to-r from-[#73a942] to-[#538d22] px-5 py-3 text-sm font-extrabold text-white shadow-[0_10px_26px_rgba(83,141,34,0.28)] transition hover:-translate-y-0.5"
+              >
+                Nộp bài
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:gap-8">
-          <div className="min-w-0 flex-1">
-            <div className="sticky top-2 z-30 mb-4 rounded-2xl border border-[#cccccc] bg-white/95 p-4 shadow-md backdrop-blur sm:p-5">
-              <div className="mb-2 flex items-center gap-2">
-                <span className="rounded-full bg-[#7f7f7f] px-3 py-1 text-xs font-bold text-white">
-                  {direction === "across" ? "Hàng ngang" : "Hàng dọc"}
-                </span>
-
-                {activeClueNumber ? (
-                  <span className="rounded-full border border-[#cccccc] bg-[#f2f2f2] px-3 py-1 text-xs font-bold text-[#7f7f7f]">
-                    Câu {activeClueNumber}
-                  </span>
-                ) : null}
-              </div>
-
-              <p className="text-sm font-semibold leading-6 text-[#333333] sm:text-base">
-                {activeClueText || "Chạm vào một ô để xem câu hỏi ở đây"}
-              </p>
+        {activeClue && (
+          <div className="sticky top-3 z-20 mb-5 rounded-[24px] border border-[#cfe19a] bg-[#f8fbef]/95 p-4 shadow-[0_12px_24px_rgba(36,85,1,0.07)] backdrop-blur">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-[#73a942] px-3 py-1 text-xs font-bold text-white">
+                {activeClue.direction === "across" ? "Hàng ngang" : "Hàng dọc"}
+              </span>
+              <span className="rounded-full bg-[#f0ead2] px-3 py-1 text-xs font-bold text-[#538d22]">
+                Câu {activeClue.number}
+              </span>
             </div>
 
-            <div className="rounded-[24px] border border-[#cccccc] bg-white/70 p-3 shadow-sm sm:p-4 lg:min-h-[720px] lg:p-6">
+            <div className="text-base font-bold text-[#245501] sm:text-lg">
+              {activeClue.text}
+            </div>
+
+            <div className="mt-2 text-sm text-[#5f7833]">
+              Đang nhập:{" "}
+              <span className="font-extrabold tracking-[0.2em] text-[#538d22]">
+                {currentAnswerPreview || "________"}
+              </span>
+            </div>
+          </div>
+        )}
+
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="overflow-hidden rounded-[30px] border border-[#dde5b6] bg-white/55 p-3 shadow-[0_10px_30px_rgba(36,85,1,0.08)] backdrop-blur sm:p-5">
+            <div className="overflow-x-auto">
               <CrosswordGrid
                 grid={grid}
-                values={values}
-                setValues={setValues}
-                submitted={submitted}
+                userGrid={userGrid}
+                setUserGrid={setUserGrid}
                 activeCell={activeCell}
                 setActiveCell={setActiveCell}
                 direction={direction}
                 setDirection={setDirection}
-                activeAcrossIndex={activeAcrossIndex}
-                activeDownIndex={activeDownIndex}
-                cellNumberMap={cellNumberMap}
-                acrossIndexMap={acrossIndexMap}
-                downIndexMap={downIndexMap}
+                activeClue={activeClue}
+                setActiveClue={setActiveClue}
               />
             </div>
           </div>
 
-          <div className="hidden w-full xl:block xl:w-[420px] xl:shrink-0">
+          <div className="space-y-5">
             <CluesPanel
-              across={acrossClues}
-              down={downClues}
-              activeAcrossIndex={activeAcrossIndex}
-              activeDownIndex={activeDownIndex}
-              direction={direction}
+              title="Hàng ngang"
+              clues={acrossClues}
+              activeClueNumber={activeClue?.number ?? null}
+              onSelectClue={handleSelectClue}
+            />
+
+            <CluesPanel
+              title="Hàng dọc"
+              clues={downClues}
+              activeClueNumber={activeClue?.number ?? null}
+              onSelectClue={handleSelectClue}
             />
           </div>
-        </div>
-
-        <div className="mt-6 flex justify-center lg:mt-10">
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="w-full rounded-2xl bg-[#7f7f7f] px-6 py-4 text-lg font-bold text-white shadow-lg transition-all duration-200 hover:-translate-y-1 hover:bg-[#6f6f6f] hover:shadow-xl disabled:opacity-50 sm:w-auto sm:px-10 sm:text-xl"
-          >
-            {loading ? "Đang lưu..." : "Nộp bài"}
-          </button>
         </div>
       </div>
     </main>

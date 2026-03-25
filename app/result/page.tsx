@@ -25,29 +25,49 @@ export default function ResultPage() {
     }
   }, []);
 
+  function formatTime(seconds: number) {
+    const min = Math.floor(seconds / 60);
+    const sec = seconds % 60;
+    return `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+  }
+
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f2f2f2] via-[#cccccc] to-[#a5a5a5] px-6 py-10">
-      <div className="w-full max-w-2xl rounded-[36px] border border-[#cccccc] bg-[#f2f2f2]/95 p-10 text-center shadow-[0_20px_60px_rgba(127,127,127,0.18)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_80px_rgba(127,127,127,0.22)]">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-[#f0ead2] via-[#dde5b6] to-[#adc178] px-6 py-10">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-20 -left-20 h-72 w-72 rounded-full bg-[#f0ead2]/60 blur-3xl" />
+        <div className="absolute right-0 top-1/4 h-80 w-80 rounded-full bg-[#dde5b6]/50 blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-[#aad576]/35 blur-3xl" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-2xl rounded-[36px] border border-[#dde5b6] bg-white/85 p-10 text-center shadow-[0_20px_60px_rgba(36,85,1,0.12)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_80px_rgba(36,85,1,0.16)]">
         <div className="mb-8">
-          <p className="mb-3 inline-block rounded-full border border-[#cccccc] bg-white px-4 py-2 text-sm font-semibold text-[#7f7f7f] shadow-sm">
+          <p className="mb-3 inline-block rounded-full border border-[#dde5b6] bg-[#f0ead2] px-4 py-2 text-sm font-semibold text-[#538d22] shadow-sm">
             Hoàn thành
           </p>
-          <h1 className="text-4xl font-extrabold text-[#7f7f7f]">
+
+          <h1 className="text-4xl font-extrabold text-[#245501]">
             Kết quả của bạn
           </h1>
+
+          <p className="mt-3 text-base text-[#538d22]">
+            Cảm ơn bạn đã tham gia trò chơi
+          </p>
         </div>
 
         {result ? (
           <div className="space-y-6">
-            <div className="rounded-3xl border border-[#cccccc] bg-white p-6 shadow-sm">
-              <p className="text-3xl font-bold text-[#7f7f7f]">
-                Bạn đúng {result.score}/{result.total}
+            <div className="rounded-3xl border border-[#dde5b6] bg-[#fffef8] p-7 shadow-sm">
+              <p className="text-3xl font-bold text-[#245501]">
+                Bạn đã hoàn thành câu hỏi
               </p>
             </div>
 
-            <div className="rounded-3xl border border-[#cccccc] bg-[#f2f2f2] p-6 shadow-sm">
-              <p className="text-2xl font-bold text-[#7f7f7f]">
-                Thời gian hoàn thành: {result.time}s
+            <div className="rounded-3xl border border-[#cfe19a] bg-[#f6faea] p-6 shadow-sm">
+              <p className="text-xl font-semibold text-[#538d22]">
+                Thời gian hoàn thành
+              </p>
+              <p className="mt-2 text-3xl font-extrabold text-[#245501]">
+                {formatTime(result.time)}
               </p>
             </div>
 
@@ -58,13 +78,13 @@ export default function ResultPage() {
                 localStorage.removeItem("result");
                 window.location.href = "/";
               }}
-              className="inline-block rounded-2xl bg-[#7f7f7f] px-8 py-4 text-xl font-bold text-white shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#6f6f6f] hover:shadow-xl"
+              className="inline-block rounded-2xl bg-gradient-to-r from-[#73a942] to-[#538d22] px-8 py-4 text-xl font-bold text-white shadow-[0_12px_24px_rgba(83,141,34,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_30px_rgba(83,141,34,0.35)]"
             >
               Về trang đầu
             </button>
           </div>
         ) : (
-          <p className="text-lg text-[#7f7f7f]">Không có dữ liệu kết quả.</p>
+          <p className="text-lg text-[#245501]">Không có dữ liệu kết quả.</p>
         )}
       </div>
     </main>

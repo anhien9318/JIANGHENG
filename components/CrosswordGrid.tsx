@@ -1,108 +1,170 @@
 "use client";
 
-import React from "react";
-
-type Direction = "across" | "down";
-type ActiveCell = { row: number; col: number } | null;
+import { useEffect, useMemo, useRef } from "react";
+import {
+  allClues,
+  getCellNumberMap,
+  type CrosswordClue,
+  type Direction,
+} from "@/data/crossword";
 
 type Props = {
-  grid: string[][];
-  values: string[][];
-  setValues: React.Dispatch<React.SetStateAction<string[][]>>;
-  submitted: boolean;
-  activeCell: ActiveCell;
-  setActiveCell: React.Dispatch<React.SetStateAction<ActiveCell>>;
+  grid: readonly (readonly string[])[];
+  userGrid: string[][];
+  setUserGrid: React.Dispatch<React.SetStateAction<string[][]>>;
+  activeCell: { row: number; col: number } | null;
+  setActiveCell: (cell: { row: number; col: number } | null) => void;
   direction: Direction;
-  setDirection: React.Dispatch<React.SetStateAction<Direction>>;
-  activeAcrossIndex: number | null;
-  activeDownIndex: number | null;
-  cellNumberMap: Map<string, number>;
-  acrossIndexMap: Map<string, number>;
-  downIndexMap: Map<string, number>;
+  setDirection: (direction: Direction) => void;
+  activeClue: CrosswordClue | null;
+  setActiveClue: (clue: CrosswordClue | null) => void;
 };
+
+function isBlocked(value: string) {
+  return value === "#";
+}
+
+function getCellsForClue(clue: CrosswordClue) {
+  return clue.answer.split("").map((_, index) => {
+    const row = clue.direction === "across" ? clue.row : clue.row + index;
+    const col = clue.direction === "across" ? clue.col + index : clue.col;
+    return { row, col };
+  });
+}
+
+function sameCell(a: { row: number; col: number }, b: { row: number; col: number }) {
+  return a.row === b.row && a.col === b.col;
+}
+
+function findCluesAtCell(row: number, col: number) {
+  return allClues.filter((clue) =>
+    getCellsForClue(clue).some((cell) => cell.row === row && cell.col === col)
+  );
+}
+
+function findClueByCellAndDirection(
+  row: number,
+  col: number,
+  direction: Direction
+): CrosswordClue | null {
+  return (
+    allClues.find(
+      (clue) =>
+        clue.direction === direction &&
+        getCellsForClue(clue).some((cell) => cell.row === row && cell.col === col)
+    ) || null
+  );
+}
 
 export default function CrosswordGrid({
   grid,
-  values,
-  setValues,
-  submitted,
+  userGrid,
+  setUserGrid,
   activeCell,
   setActiveCell,
   direction,
   setDirection,
-  activeAcrossIndex,
-  activeDownIndex,
-  cellNumberMap,
-  acrossIndexMap,
-  downIndexMap,
+  activeClue,
+  setActiveClue,
 }: Props) {
-  function updateCell(row: number, col: number, value: string) {
-    const char = value ? value.slice(-1).toUpperCase() : "";
+  const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const numberMap = useMemo(() => getCellNumberMap(), []);
 
-    setValues((prev) => {
+  const activeCells = useMemo(() => {
+    if (!activeClue) return [];
+    return getCellsForClue(activeClue);
+  }, [activeClue]);
+
+  useEffect(() => {
+    if (!activeCell) return;
+    const key = `${activeCell.row}-${activeCell.col}`;
+    inputRefs.current[key]?.focus();
+  }, [activeCell]);
+
+  function focusCell(row: number, col: number) {
+    setActiveCell({ row, col });
+
+    const nextClue =
+      findClueByCellAndDirection(row, col, direction) ||
+      findClueByCellAndDirection(row, col, direction === "across" ? "down" : "across");
+
+    if (nextClue) {
+      setActiveClue(nextClue);
+    }
+  }
+
+  function handleCellClick(row: number, col: number) {
+    if (isBlocked(grid[row][col])) return;
+
+    const sameActive =
+      activeCell && activeCell.row === row && activeCell.col === col;
+
+    const cellClues = findCluesAtCell(row, col);
+
+    if (sameActive && cellClues.length >= 2) {
+      const newDirection = direction === "across" ? "down" : "across";
+      setDirection(newDirection);
+
+      const toggledClue = findClueByCellAndDirection(row, col, newDirection);
+      if (toggledClue) setActiveClue(toggledClue);
+    } else {
+      const clue =
+        findClueByCellAndDirection(row, col, direction) ||
+        cellClues[0] ||
+        null;
+
+      if (clue) {
+        setDirection(clue.direction);
+        setActiveClue(clue);
+      }
+    }
+
+    setActiveCell({ row, col });
+  }
+
+  function moveToNextCell(row: number, col: number) {
+    const current = activeClue;
+    if (!current) return;
+
+    const cells = getCellsForClue(current);
+    const index = cells.findIndex((cell) => cell.row === row && cell.col === col);
+
+    if (index >= 0 && index < cells.length - 1) {
+      const next = cells[index + 1];
+      setActiveCell(next);
+      return;
+    }
+
+    setActiveCell({ row, col });
+  }
+
+  function moveToPreviousCell(row: number, col: number) {
+    const current = activeClue;
+    if (!current) return;
+
+    const cells = getCellsForClue(current);
+    const index = cells.findIndex((cell) => cell.row === row && cell.col === col);
+
+    if (index > 0) {
+      const prev = cells[index - 1];
+      setActiveCell(prev);
+      return;
+    }
+
+    setActiveCell({ row, col });
+  }
+
+  function handleChange(row: number, col: number, value: string) {
+    const char = value.slice(-1).toUpperCase().replace(/[^A-ZÀ-Ỹ]/g, "");
+
+    setUserGrid((prev) => {
       const next = prev.map((r) => [...r]);
       next[row][col] = char;
       return next;
     });
-  }
 
-  function focusCell(row: number, col: number) {
-    if (grid[row][col] === "#") return;
-
-    if (activeCell && activeCell.row === row && activeCell.col === col) {
-      setDirection((prev) => (prev === "across" ? "down" : "across"));
-    } else {
-      setActiveCell({ row, col });
-    }
-  }
-
-  function moveToNextCell(row: number, col: number) {
-    let nextRow = row;
-    let nextCol = col;
-
-    if (direction === "across") {
-      nextCol++;
-      while (nextCol < grid[row].length && grid[row][nextCol] === "#") {
-        nextCol++;
-      }
-      if (nextCol < grid[row].length) {
-        setActiveCell({ row: nextRow, col: nextCol });
-        document.getElementById(`cell-${nextRow}-${nextCol}`)?.focus();
-      }
-    } else {
-      nextRow++;
-      while (nextRow < grid.length && grid[nextRow][col] === "#") {
-        nextRow++;
-      }
-      if (nextRow < grid.length) {
-        setActiveCell({ row: nextRow, col: nextCol });
-        document.getElementById(`cell-${nextRow}-${nextCol}`)?.focus();
-      }
-    }
-  }
-
-  function moveToPrevCell(row: number, col: number) {
-    let prevRow = row;
-    let prevCol = col;
-
-    if (direction === "across") {
-      prevCol--;
-      while (prevCol >= 0 && grid[row][prevCol] === "#") {
-        prevCol--;
-      }
-      if (prevCol >= 0) {
-        setActiveCell({ row: prevRow, col: prevCol });
-        document.getElementById(`cell-${prevRow}-${prevCol}`)?.focus();
-      }
-    } else {
-      prevRow--;
-      while (prevRow >= 0 && grid[prevRow][col] === "#") {
-        prevRow--;
-      }
-      if (prevRow >= 0) {
-        setActiveCell({ row: prevRow, col: prevCol });
-        document.getElementById(`cell-${prevRow}-${prevCol}`)?.focus();
-      }
+    if (char) {
+      moveToNextCell(row, col);
     }
   }
 
@@ -112,10 +174,14 @@ export default function CrosswordGrid({
     col: number
   ) {
     if (e.key === "Backspace") {
-      if (values[row][col]) {
-        updateCell(row, col, "");
+      if (userGrid[row][col]) {
+        setUserGrid((prev) => {
+          const next = prev.map((r) => [...r]);
+          next[row][col] = "";
+          return next;
+        });
       } else {
-        moveToPrevCell(row, col);
+        moveToPreviousCell(row, col);
       }
       return;
     }
@@ -123,6 +189,8 @@ export default function CrosswordGrid({
     if (e.key === "ArrowRight") {
       e.preventDefault();
       setDirection("across");
+      const clue = findClueByCellAndDirection(row, col, "across");
+      if (clue) setActiveClue(clue);
       moveToNextCell(row, col);
       return;
     }
@@ -130,18 +198,25 @@ export default function CrosswordGrid({
     if (e.key === "ArrowLeft") {
       e.preventDefault();
       setDirection("across");
-      moveToPrevCell(row, col);
+      const clue = findClueByCellAndDirection(row, col, "across");
+      if (clue) setActiveClue(clue);
+      moveToPreviousCell(row, col);
       return;
     }
 
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setDirection("down");
-      let nextRow = row + 1;
-      while (nextRow < grid.length && grid[nextRow][col] === "#") nextRow++;
-      if (nextRow < grid.length) {
-        setActiveCell({ row: nextRow, col });
-        document.getElementById(`cell-${nextRow}-${col}`)?.focus();
+      const clue = findClueByCellAndDirection(row, col, "down");
+      if (clue) setActiveClue(clue);
+
+      const downClue = findClueByCellAndDirection(row, col, "down");
+      if (!downClue) return;
+
+      const cells = getCellsForClue(downClue);
+      const index = cells.findIndex((cell) => cell.row === row && cell.col === col);
+      if (index >= 0 && index < cells.length - 1) {
+        setActiveCell(cells[index + 1]);
       }
       return;
     }
@@ -149,108 +224,76 @@ export default function CrosswordGrid({
     if (e.key === "ArrowUp") {
       e.preventDefault();
       setDirection("down");
-      let prevRow = row - 1;
-      while (prevRow >= 0 && grid[prevRow][col] === "#") prevRow--;
-      if (prevRow >= 0) {
-        setActiveCell({ row: prevRow, col });
-        document.getElementById(`cell-${prevRow}-${col}`)?.focus();
+      const clue = findClueByCellAndDirection(row, col, "down");
+      if (clue) setActiveClue(clue);
+
+      const downClue = findClueByCellAndDirection(row, col, "down");
+      if (!downClue) return;
+
+      const cells = getCellsForClue(downClue);
+      const index = cells.findIndex((cell) => cell.row === row && cell.col === col);
+      if (index > 0) {
+        setActiveCell(cells[index - 1]);
       }
     }
   }
 
-  function getCellClass(row: number, col: number) {
-    const isActive = activeCell?.row === row && activeCell?.col === col;
-
-    const isInAcross =
-      activeAcrossIndex !== null &&
-      acrossIndexMap.get(`${row}-${col}`) === activeAcrossIndex;
-
-    const isInDown =
-      activeDownIndex !== null &&
-      downIndexMap.get(`${row}-${col}`) === activeDownIndex;
-
-    const isInPrimaryWord = direction === "across" ? isInAcross : isInDown;
-    const isInSecondaryWord = direction === "across" ? isInDown : isInAcross;
-
-    const base =
-      "relative flex h-9 w-9 items-center justify-center rounded-lg border text-center text-sm font-bold uppercase outline-none transition-all duration-200 sm:h-10 sm:w-10 sm:text-base md:h-12 md:w-12 md:rounded-xl md:text-lg lg:h-14 lg:w-14 lg:text-xl";
-
-    if (isActive) {
-      return `${base} z-20 scale-105 border-[#7f7f7f] bg-white text-black shadow-[0_10px_24px_rgba(0,0,0,0.12)] ring-2 ring-[#cccccc]`;
-    }
-
-    if (isInPrimaryWord) {
-      return `${base} border-[#a5a5a5] bg-[#e9e9e9] text-black shadow-sm`;
-    }
-
-    if (isInSecondaryWord) {
-      return `${base} border-[#cccccc] bg-[#f6f6f6] text-[#333333]`;
-    }
-
-    return `${base} border-[#cccccc] bg-white text-black hover:-translate-y-[1px] hover:shadow-sm`;
-  }
-
   return (
-    <div className="w-full overflow-x-auto pb-2">
+    <div className="flex justify-center overflow-x-auto">
       <div
-        className="mx-auto grid w-max gap-1.5 sm:gap-2 md:gap-2.5"
+        className="grid gap-[4px]"
         style={{
-          gridTemplateColumns: `repeat(${grid[0].length}, minmax(0, max-content))`,
+          gridTemplateColumns: `repeat(${grid[0].length}, minmax(0, 1fr))`,
         }}
       >
-        {grid.map((row, r) =>
-          row.map((cell, c) => {
-            const key = `${r}-${c}`;
+        {grid.map((row, rowIndex) =>
+          row.map((cell, colIndex) => {
+            const blocked = isBlocked(cell);
+            const isActive =
+              activeCell?.row === rowIndex && activeCell?.col === colIndex;
 
-            if (cell === "#") {
+            const isInActiveWord = activeCells.some((item) =>
+              sameCell(item, { row: rowIndex, col: colIndex })
+            );
+
+            const cellNumber = numberMap.get(`${rowIndex}-${colIndex}`);
+            const key = `${rowIndex}-${colIndex}`;
+
+            if (blocked) {
               return (
                 <div
                   key={key}
-                  className="h-9 w-9 sm:h-10 sm:w-10 md:h-12 md:w-12 lg:h-14 lg:w-14"
+                  className="h-11 w-11 rounded-[10px] bg-transparent sm:h-12 sm:w-12"
                 />
               );
             }
 
-            const clueNumber = cellNumberMap.get(key);
-
-            const isCorrect =
-              submitted &&
-              values[r][c].toUpperCase() === grid[r][c].toUpperCase();
-
-            const isWrong =
-              submitted &&
-              values[r][c] &&
-              values[r][c].toUpperCase() !== grid[r][c].toUpperCase();
-
             return (
               <div key={key} className="relative">
-                {clueNumber && (
-                  <span className="pointer-events-none absolute left-1 top-0.5 z-10 text-[8px] font-bold text-[#666] sm:left-1.5 sm:top-1 sm:text-[9px] md:text-[10px]">
-                    {clueNumber}
+                {cellNumber && (
+                  <span className="pointer-events-none absolute left-1 top-1 z-10 text-[10px] font-extrabold leading-none text-[#6f8f35] sm:text-[11px]">
+                    {cellNumber}
                   </span>
                 )}
 
                 <input
-                  id={`cell-${r}-${c}`}
-                  maxLength={1}
-                  inputMode="text"
-                  autoCapitalize="characters"
-                  value={values[r][c]}
-                  onFocus={() => setActiveCell({ row: r, col: c })}
-                  onClick={() => focusCell(r, c)}
-                  onChange={(e) => {
-                    updateCell(r, c, e.target.value);
-                    if (e.target.value) moveToNextCell(r, c);
+                  ref={(el) => {
+                    inputRefs.current[key] = el;
                   }}
-                  onKeyDown={(e) => handleKeyDown(e, r, c)}
-                  className={`${getCellClass(r, c)} ${
-                    isCorrect
-                      ? "!border-[#4f4f4f] !bg-[#d1ffd6] !text-black"
-                      : ""
-                  } ${
-                    isWrong
-                      ? "!border-[#999999] !bg-[#ffe3e3] !text-black"
-                      : ""
+                  value={userGrid[rowIndex][colIndex]}
+                  onClick={() => handleCellClick(rowIndex, colIndex)}
+                  onFocus={() => focusCell(rowIndex, colIndex)}
+                  onChange={(e) =>
+                    handleChange(rowIndex, colIndex, e.target.value)
+                  }
+                  onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex)}
+                  maxLength={1}
+                  className={`h-11 w-11 rounded-[10px] border-[2.5px] text-center text-base font-black uppercase outline-none transition sm:h-12 sm:w-12 sm:text-lg ${
+                    isActive
+                      ? "border-[#4f7f1d] bg-[#edf7cf] text-[#1f3f00] shadow-[0_0_0_2px_rgba(170,213,118,0.35)]"
+                      : isInActiveWord
+                      ? "border-[#90b84f] bg-[#f7fbe9] text-[#245501]"
+                      : "border-[#7ea63e] bg-white text-[#245501]"
                   }`}
                 />
               </div>
