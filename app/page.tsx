@@ -38,7 +38,7 @@ export default function AccessPage() {
   const wolfReachedEnd = progress >= 100;
 
 const flowers = useMemo<FlowerItem[]>(() => {
-  const count = 40;
+  const count = 60;
 
   return Array.from({ length: count }, (_, i) => ({
     id: i,
@@ -56,9 +56,9 @@ const flowers = useMemo<FlowerItem[]>(() => {
     return Array.from({ length: 26 }, (_, i) => ({
       id: i,
       left: Math.random() * 100,
-      delay: Math.random() * 1.2,
+      delay: Math.random() * 0.6,
       duration: 2.8 + Math.random() * 1.8,
-      size: 28 + Math.random() * 20,
+      size: 180 + Math.random() * 180,
       rotate: -25 + Math.random() * 50,
     }));
   }, [isUnlocking]);
@@ -66,13 +66,13 @@ const flowers = useMemo<FlowerItem[]>(() => {
 function triggerFlowerRain() {
   setShowFlowerRain(false);
 
-  setTimeout(() => {
+  requestAnimationFrame(() => {
     setShowFlowerRain(true);
 
     setTimeout(() => {
       setShowFlowerRain(false);
-    }, 19000);
-  }, 50);
+    }, 9000);
+  });
 }
 
   function triggerShake() {
