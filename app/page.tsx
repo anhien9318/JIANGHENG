@@ -38,14 +38,14 @@ export default function AccessPage() {
   const wolfReachedEnd = progress >= 100;
 
 const flowers = useMemo<FlowerItem[]>(() => {
-  const count = 60;
+  const count = 40;
 
   return Array.from({ length: count }, (_, i) => ({
     id: i,
     left: Math.random() * 100,
     delay: Math.random() * 2,
     duration: 6 + Math.random() * 3,
-    size: 32 + Math.random() * 28,
+    size: 40 + Math.random() * 50,
     drift: -30 + Math.random() * 60,
     rotateStart: -25 + Math.random() * 50,
     rotateEnd: -180 + Math.random() * 360,
