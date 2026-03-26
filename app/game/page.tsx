@@ -122,7 +122,7 @@ export default function GamePage() {
                 changhenngaygap
               </div>
               <h1 className="text-2xl font-extrabold text-[#245501] sm:text-3xl">
-                Crossword Game
+                Thi học giữa học kì II
               </h1>
               <p className="mt-1 text-sm text-[#538d22] sm:text-base">
                 Chạm vào ô hoặc chọn câu hỏi để điền đáp án

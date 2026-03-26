@@ -11,6 +11,9 @@ type FlowerItem = {
   delay: number;
   duration: number;
   size: number;
+  drift: number;
+  rotateStart: number;
+  rotateEnd: number;
 };
 
 type CarrotItem = {
@@ -34,17 +37,20 @@ export default function AccessPage() {
   const wolfPosition = Math.min(progress, 97);
   const wolfReachedEnd = progress >= 100;
 
-  const flowers = useMemo<FlowerItem[]>(() => {
-    const count = 12;
+const flowers = useMemo<FlowerItem[]>(() => {
+  const count = 40;
 
-    return Array.from({ length: count }, (_, i) => ({
-      id: i,
-      left: 5 + i * (90 / count) + (Math.random() * 3 - 1.5),
-      delay: Math.random() * 1.4,
-      duration: 3.4 + Math.random() * 1.2,
-      size: 85 + Math.random() * 25,
-    }));
-  }, [showFlowerRain]);
+  return Array.from({ length: count }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    delay: Math.random() * 2,
+    duration: 6 + Math.random() * 3,
+    size: 32 + Math.random() * 28,
+    drift: -30 + Math.random() * 60,
+    rotateStart: -25 + Math.random() * 50,
+    rotateEnd: -180 + Math.random() * 360,
+  }));
+}, [showFlowerRain]);
 
   const carrots = useMemo<CarrotItem[]>(() => {
     return Array.from({ length: 26 }, (_, i) => ({
@@ -57,17 +63,17 @@ export default function AccessPage() {
     }));
   }, [isUnlocking]);
 
-  function triggerFlowerRain() {
-    setShowFlowerRain(false);
+function triggerFlowerRain() {
+  setShowFlowerRain(false);
+
+  setTimeout(() => {
+    setShowFlowerRain(true);
 
     setTimeout(() => {
-      setShowFlowerRain(true);
-
-      setTimeout(() => {
-        setShowFlowerRain(false);
-      }, 4200);
-    }, 50);
-  }
+      setShowFlowerRain(false);
+    }, 19000);
+  }, 50);
+}
 
   function triggerShake() {
     setShake(false);
@@ -82,36 +88,35 @@ export default function AccessPage() {
   }
 
   function startUnlockAnimation() {
-  setIsUnlocking(true);
-  setProgress(0);
+    setIsUnlocking(true);
+    setProgress(0);
 
-  const totalDuration = 2600;
-  const intervalTime = 35;
-  const step = 100 / (totalDuration / intervalTime);
+    const totalDuration = 2600;
+    const intervalTime = 35;
+    const step = 100 / (totalDuration / intervalTime);
 
-  let current = 0;
+    let current = 0;
 
-  const timer = setInterval(() => {
-    current += step;
+    const timer = setInterval(() => {
+      current += step;
 
-    if (current >= 100) {
-      current = 100;
-      setProgress(100);
-      clearInterval(timer);
+      if (current >= 100) {
+        current = 100;
+        setProgress(100);
+        clearInterval(timer);
 
-      localStorage.setItem("access_granted", "true");
+        localStorage.setItem("access_granted", "true");
 
-      // đứng lại 5 giây
-      setTimeout(() => {
-        router.push("/register");
-      }, 2000);
+        setTimeout(() => {
+          router.push("/register");
+        }, 2000);
 
-      return;
-    }
+        return;
+      }
 
-    setProgress(current);
-  }, intervalTime);
-}
+      setProgress(current);
+    }, intervalTime);
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -143,14 +148,19 @@ export default function AccessPage() {
             <div
               key={flower.id}
               className="flower-wrap"
-              style={{
-                left: `${flower.left}%`,
-                animationDelay: `${flower.delay}s`,
-                animationDuration: `${flower.duration}s`,
-                width: `${flower.size}px`,
-              }}
+              style={
+                {
+                  left: `${flower.left}%`,
+                  animationDelay: `${flower.delay}s`,
+                  animationDuration: `${flower.duration}s`,
+                  width: `${flower.size}px`,
+                  "--drift": `${flower.drift}px`,
+                  "--rotate-start": `${flower.rotateStart}deg`,
+                  "--rotate-end": `${flower.rotateEnd}deg`,
+                } as React.CSSProperties
+              }
             >
-              <img src="/flower.gif" alt="flower" className="flower-img" />
+              <img src="/flower.png" alt="flower" className="flower-img" />
             </div>
           ))}
         </div>
@@ -209,114 +219,107 @@ export default function AccessPage() {
         </form>
       </div>
 
-{isUnlocking && (
-  <div className="fixed inset-0 z-[10000] overflow-hidden bg-[#245501]/38 backdrop-blur-lg">
-    <div className="absolute inset-0 pointer-events-none">
-      <div className="absolute -top-24 left-1/4 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 h-80 w-80 rounded-full bg-[#aad576]/20 blur-3xl" />
-    </div>
+      {isUnlocking && (
+        <div className="fixed inset-0 z-[10000] overflow-hidden bg-[#245501]/38 backdrop-blur-lg">
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute -top-24 left-1/4 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+            <div className="absolute bottom-0 right-1/4 h-80 w-80 rounded-full bg-[#aad576]/20 blur-3xl" />
+          </div>
 
-    <div className="pointer-events-none absolute inset-0 overflow-hidden z-[1]">
-      {carrots.map((carrot) => (
-        <div
-          key={carrot.id}
-          className="carrot-wrap"
-          style={{
-            left: `${carrot.left}%`,
-            animationDelay: `${carrot.delay}s`,
-            animationDuration: `${carrot.duration}s`,
-            width: `${carrot.size}px`,
-            transform: `rotate(${carrot.rotate}deg)`,
-          }}
-        >
-          <img src="/carrot.png" alt="carrot" className="carrot-img" />
+          <div className="pointer-events-none absolute inset-0 overflow-hidden z-[1]">
+            {carrots.map((carrot) => (
+              <div
+                key={carrot.id}
+                className="carrot-wrap"
+                style={{
+                  left: `${carrot.left}%`,
+                  animationDelay: `${carrot.delay}s`,
+                  animationDuration: `${carrot.duration}s`,
+                  width: `${carrot.size}px`,
+                  transform: `rotate(${carrot.rotate}deg)`,
+                }}
+              >
+                <img src="/carrot.png" alt="carrot" className="carrot-img" />
+              </div>
+            ))}
+          </div>
+
+          <div className="relative z-[2] flex min-h-screen flex-col items-center justify-center px-4 sm:px-6">
+            <p className="mb-2 sm:mb-3 text-[11px] sm:text-sm font-semibold tracking-[0.3em] text-white/80">
+              UNLOCKING
+            </p>
+
+            <h2 className="unlock-title mt-4 sm:mt-6 mb-6 sm:mb-8 text-center text-xl sm:text-3xl font-extrabold text-white px-4">
+              Phái Ân, bé iu của anh tới ngay nè!!!
+            </h2>
+
+            <div className="relative w-[94vw] max-w-[1400px] h-[220px] sm:h-[280px] md:h-[320px] lg:h-[360px]">
+              <div className="absolute left-[4%] right-[14%] top-1/2 -translate-y-1/2">
+                <div className="relative h-12 sm:h-14 md:h-16 rounded-full bg-white/20 shadow-inner overflow-visible">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#c7ea8e] via-[#8fcf49] to-[#538d22] transition-all duration-200 unlock-progress-glow"
+                    style={{ width: `${progress}%` }}
+                  />
+
+                  <div
+                    className="absolute top-1/2 z-[3] transition-all duration-200"
+                    style={{
+                      left: `${wolfPosition}%`,
+                      transform: wolfReachedEnd
+                        ? "translate(-80%, -50%)"
+                        : "translate(-50%, -50%)",
+                    }}
+                  >
+                    <img
+                      src="/2.png"
+                      alt="wolf"
+                      className={`block w-[120px] sm:w-[150px] md:w-[230px] lg:w-[400px] max-w-none object-contain drop-shadow-2xl ${
+                        progress < 100 ? "wolf-run" : "wolf-stop"
+                      }`}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className="absolute right-[3%] top-1/2 z-[2] rabbit-bounce"
+                style={{ transform: "translateY(-50%)" }}
+              >
+                <img
+                  src="/3.png"
+                  alt="rabbit"
+                  className="w-[120px] sm:w-[150px] md:w-[230px] lg:w-[400px] object-contain drop-shadow-2xl"
+                />
+              </div>
+
+              {progress >= 85 && (
+                <div className="absolute right-[8%] sm:right-[9%] top-[32%] pointer-events-none z-[4]">
+                  <div className="sparkle sparkle-1">✨</div>
+                  <div className="sparkle sparkle-2">✨</div>
+                  <div className="sparkle sparkle-3">✨</div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-[-6px] sm:mt-[-12px] text-center">
+              <p className="text-2xl sm:text-3xl font-extrabold text-white drop-shadow-md">
+                {Math.round(progress)}%
+              </p>
+              <p className="mt-1 text-sm sm:text-base font-medium text-white/85">
+                Chuẩn bị chuyển sang trang đăng ký
+              </p>
+            </div>
+          </div>
         </div>
-      ))}
-    </div>
-
-    <div className="relative z-[2] flex min-h-screen flex-col items-center justify-center px-4 sm:px-6">
-      <p className="mb-2 sm:mb-3 text-[11px] sm:text-sm font-semibold tracking-[0.3em] text-white/80">
-        UNLOCKING
-      </p>
-
-      <h2 className="unlock-title mt-4 sm:mt-6 mb-6 sm:mb-8 text-center text-xl sm:text-3xl font-extrabold text-white px-4">
-        Phái Ân, bé iu của anh tới ngay nè!!!
-      </h2>
-<div className="relative w-[94vw] max-w-[1400px] h-[220px] sm:h-[280px] md:h-[320px] lg:h-[360px]">
-  {/* TRACK + WOLF */}
-  <div className="absolute left-[4%] right-[14%] top-1/2 -translate-y-1/2">
-    <div className="relative h-12 sm:h-14 md:h-16 rounded-full bg-white/20 shadow-inner overflow-visible">
-      {/* PROGRESS */}
-      <div
-        className="h-full rounded-full bg-gradient-to-r from-[#c7ea8e] via-[#8fcf49] to-[#538d22] transition-all duration-200 unlock-progress-glow"
-        style={{ width: `${progress}%` }}
-      />
-
-      {/* WOLF */}
-      <div
-  className="absolute top-1/2 z-[3] transition-all duration-200"
-  style={{
-    left: `${wolfPosition}%`,
-    transform: wolfReachedEnd
-      ? "translate(-80%, -50%)"
-      : "translate(-50%, -50%)",
-  }}
->
-  <img
-    src="/2.png"
-    alt="wolf"
-    className={`block w-[120px] sm:w-[150px] md:w-[230px] lg:w-[400px] max-w-none object-contain drop-shadow-2xl ${
-      progress < 100 ? "wolf-run" : "wolf-stop"
-    }`}
-  />
-</div>
-    </div>
-  </div>
-
-  {/* RABBIT */}
-  <div
-    className="absolute right-[3%] top-1/2 z-[2] rabbit-bounce"
-    style={{ transform: "translateY(-50%)" }}
-  >
-    <img
-      src="/3.png"
-      alt="rabbit"
-      className="w-[120px] sm:w-[150px] md:w-[230px] lg:w-[400px] object-contain drop-shadow-2xl"
-    />
-  </div>
-
-  {/* SPARKLE */}
-  {progress >= 85 && (
-    <div className="absolute right-[8%] sm:right-[9%] top-[32%] pointer-events-none z-[4]">
-      <div className="sparkle sparkle-1">✨</div>
-      <div className="sparkle sparkle-2">✨</div>
-      <div className="sparkle sparkle-3">✨</div>
-    </div>
-  )}
-</div>        
-  
-
- 
-      <div className="mt-[-6px] sm:mt-[-12px] text-center">
-        <p className="text-2xl sm:text-3xl font-extrabold text-white drop-shadow-md">
-          {Math.round(progress)}%
-        </p>
-        <p className="mt-1 text-sm sm:text-base font-medium text-white/85">
-          Chuẩn bị chuyển sang trang đăng ký
-        </p>
-      </div>
-
-    </div>
-  </div>
-)}
+      )}
 
       <style jsx>{`
-        .flower-wrap {
-          position: absolute;
-          top: -140px;
-          animation: flowerFall linear forwards;
-          will-change: transform, opacity;
-        }
+.flower-wrap {
+  position: absolute;
+  top: -80px;
+  animation: flowerFall linear forwards;
+  will-change: transform, opacity;
+}
 
         .flower-img {
           display: block;
@@ -346,24 +349,26 @@ export default function AccessPage() {
           filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.2));
         }
 
-        @keyframes flowerFall {
-          0% {
-            transform: translateY(0) translateX(0) scale(0.92) rotate(0deg);
-            opacity: 0;
-          }
-          12% {
-            opacity: 1;
-          }
-          50% {
-            transform: translateY(55vh) translateX(-12px) scale(1) rotate(8deg);
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(120vh) translateX(12px) scale(1.04)
-              rotate(-8deg);
-            opacity: 1;
-          }
-        }
+@keyframes flowerFall {
+  0% {
+    transform: translateY(-12vh) translateX(0) scale(0.95)
+      rotate(var(--rotate-start));
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(45vh) translateX(calc(var(--drift) * 0.5))
+      scale(1) rotate(calc((var(--rotate-start) + var(--rotate-end)) / 2));
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(120vh) translateX(var(--drift)) scale(1.05)
+      rotate(var(--rotate-end));
+    opacity: 0.95;
+  }
+}
 
         @keyframes carrotFall {
           0% {
@@ -422,12 +427,12 @@ export default function AccessPage() {
         }
 
         .wolf-run {
-            animation: wolfBounce 0.7s ease-in-out infinite;
-          }
+          animation: wolfBounce 0.7s ease-in-out infinite;
+        }
 
-          .wolf-stop {
-            animation: none;
-          }
+        .wolf-stop {
+          animation: none;
+        }
 
         .rabbit-bounce img {
           animation: rabbitIdle 1.6s ease-in-out infinite;

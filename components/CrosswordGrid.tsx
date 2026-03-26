@@ -299,9 +299,9 @@ export default function CrosswordGrid({
                     className={`h-8 w-8 rounded-[8px] border-[2px] text-center text-[13px] font-black uppercase outline-none transition xs:h-9 xs:w-9 xs:text-sm sm:h-10 sm:w-10 sm:rounded-[9px] sm:text-base md:h-11 md:w-11 md:rounded-[10px] md:border-[2.5px] md:text-base lg:h-12 lg:w-12 lg:text-lg ${
                       isActive
                         ? "border-[#4f7f1d] bg-[#edf7cf] text-[#1f3f00] shadow-[0_0_0_2px_rgba(170,213,118,0.35)]"
-                        : isInActiveWord
-                        ? "border-[#90b84f] bg-[#f7fbe9] text-[#245501]"
-                        : "border-[#7ea63e] bg-white text-[#245501]"
+                      : isInActiveWord
+                        ? "border-[#b7d78a] bg-[#f7fbe9] text-[#245501]"
+                        : "border-[#cfe6a8] bg-white text-[#245501]"
                     }`}
                     inputMode="text"
                     autoComplete="off"
