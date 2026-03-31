@@ -177,18 +177,18 @@ function triggerFlowerRain() {
           </p>
 
           <h1 className="mb-3 text-4xl font-extrabold tracking-tight text-[#245501]">
-            Nhập mã truy cập
+            THI GIỮA HỌC KÌ II
           </h1>
 
           <p className="text-base sm:text-lg text-[#6b7d3f]">
-            Vui lòng nhập mã để vào trang đăng ký chơi game
+            Vui lòng nhập mã đề
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="mb-2 block text-sm font-semibold text-[#538d22]">
-              Mã truy cập : hanhan99
+              
             </label>
 
             <input
@@ -250,7 +250,7 @@ function triggerFlowerRain() {
             </p>
 
             <h2 className="unlock-title mt-4 sm:mt-6 mb-6 sm:mb-8 text-center text-xl sm:text-3xl font-extrabold text-white px-4">
-              Phái Ân, bé iu của anh tới ngay nè!!!
+              Phái Ân à, bé iu của anh tới ngay nè!!!
             </h2>
 
             <div className="relative w-[94vw] max-w-[1400px] h-[220px] sm:h-[280px] md:h-[320px] lg:h-[360px]">
