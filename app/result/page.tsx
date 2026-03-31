@@ -19,6 +19,7 @@ type PlayerData = {
 export default function ResultPage() {
   const [result, setResult] = useState<ResultData | null>(null);
   const [savedToDb, setSavedToDb] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
     const accessGranted = localStorage.getItem("access_granted");
@@ -48,6 +49,8 @@ export default function ResultPage() {
 
     async function saveResult() {
       try {
+        setSaveError("");
+
         const res = await fetch("/api/save-result", {
           method: "POST",
           headers: {
@@ -65,10 +68,22 @@ export default function ResultPage() {
           }),
         });
 
-        const data = await res.json();
+        const text = await res.text();
+
+        let data: unknown = {};
+        try {
+          data = text ? JSON.parse(text) : {};
+        } catch {
+          data = { raw: text };
+        }
 
         if (!res.ok) {
-          console.error("Save result failed:", data);
+          console.error("Save result failed:", {
+            status: res.status,
+            statusText: res.statusText,
+            data,
+          });
+          setSaveError("Lưu kết quả thất bại.");
           return;
         }
 
@@ -76,6 +91,7 @@ export default function ResultPage() {
         setSavedToDb(true);
       } catch (error) {
         console.error("Save result error:", error);
+        setSaveError("Có lỗi khi lưu kết quả.");
       }
     }
 
@@ -115,7 +131,7 @@ export default function ResultPage() {
           <div className="space-y-6">
             <div className="rounded-3xl border border-[#dde5b6] bg-[#fffef8] p-7 shadow-sm">
               <p className="text-3xl font-bold text-[#245501]">
-                yah~ xong rồi đó 
+                yah~ xong rồi đó
               </p>
             </div>
 
@@ -129,7 +145,11 @@ export default function ResultPage() {
             </div>
 
             <p className="text-sm text-[#538d22]">
-              {savedToDb ? "Đã lưu kết quả thành công." : "Đang lưu kết quả..."}
+              {savedToDb
+                ? "Đã lưu kết quả thành công."
+                : saveError
+                ? saveError
+                : "Đang lưu kết quả..."}
             </p>
 
             <button
