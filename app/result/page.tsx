@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type ResultData = {
   score: number;
@@ -16,10 +16,19 @@ type PlayerData = {
   address: string;
 };
 
+type SaveResponse = {
+  success?: boolean;
+  alreadyExists?: boolean;
+  message?: string;
+  error?: string;
+};
+
 export default function ResultPage() {
   const [result, setResult] = useState<ResultData | null>(null);
   const [savedToDb, setSavedToDb] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [saveMessage, setSaveMessage] = useState("");
+  const savingRef = useRef(false);
 
   useEffect(() => {
     const accessGranted = localStorage.getItem("access_granted");
@@ -42,7 +51,7 @@ export default function ResultPage() {
 
     const alreadySaved = sessionStorage.getItem("result_saved");
 
-    if (alreadySaved === "true") {
+    if (alreadySaved === "true" || savingRef.current) {
       setSavedToDb(true);
       return;
     }
@@ -50,6 +59,11 @@ export default function ResultPage() {
     async function saveResult() {
       try {
         setSaveError("");
+        setSaveMessage("");
+        savingRef.current = true;
+
+        // chặn gọi lặp trong dev mode
+        sessionStorage.setItem("result_saved", "true");
 
         const res = await fetch("/api/save-result", {
           method: "POST",
@@ -70,11 +84,11 @@ export default function ResultPage() {
 
         const text = await res.text();
 
-        let data: unknown = {};
+        let data: SaveResponse = {};
         try {
           data = text ? JSON.parse(text) : {};
         } catch {
-          data = { raw: text };
+          data = {};
         }
 
         if (!res.ok) {
@@ -83,14 +97,24 @@ export default function ResultPage() {
             statusText: res.statusText,
             data,
           });
-          setSaveError("Lưu kết quả thất bại.");
+
+          sessionStorage.removeItem("result_saved");
+          savingRef.current = false;
+          setSaveError(data.error || "Lưu kết quả thất bại.");
           return;
         }
 
-        sessionStorage.setItem("result_saved", "true");
         setSavedToDb(true);
+
+        if (data.alreadyExists) {
+          setSaveMessage("Thi lại mấy lần rồi?");
+        } else {
+          setSaveMessage("Đã lưu kết quả thành công.");
+        }
       } catch (error) {
         console.error("Save result error:", error);
+        sessionStorage.removeItem("result_saved");
+        savingRef.current = false;
         setSaveError("Có lỗi khi lưu kết quả.");
       }
     }
@@ -145,10 +169,10 @@ export default function ResultPage() {
             </div>
 
             <p className="text-sm text-[#538d22]">
-              {savedToDb
-                ? "Đã lưu kết quả thành công."
-                : saveError
+              {saveError
                 ? saveError
+                : saveMessage
+                ? saveMessage
                 : "Đang lưu kết quả..."}
             </p>
 
