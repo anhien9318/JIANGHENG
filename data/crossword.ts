@@ -57,7 +57,7 @@ export const acrossClues: CrosswordClue[] = [
   },
   {
     number: 8,
-    text: "Địa danh nổi tiếng ở quê Giang Hành, liên quan đến một tác phẩm văn học.",
+    text: "Địa danh nổi tiếng ở quê Giang Hành, liên quan đến một tác phẩm văn học (không phải tên hán việt).",
     answer: "DINHTUYONG",
     direction: "across",
     row: 13,
@@ -100,7 +100,7 @@ export const downClues: CrosswordClue[] = [
   },
   {
     number: 5,
-    text: "Giang Hành từng nói muốn đi ngắm hoa anh đào ở đâu?",
+    text: "Giang Hành từng nói muốn đi ngắm hoa anh đào ở đâu? (tên hán việt)",
     answer: "KEMINHTU",
     direction: "down",
     row: 1,

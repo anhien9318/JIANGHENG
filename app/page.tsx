@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-const ACCESS_CODE = "songnhovovevisao";
+const ACCESS_CODE = "hanhgianglymao";
 
 type FlowerItem = {
   id: number;
@@ -188,12 +188,12 @@ function triggerFlowerRain() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="mb-2 block text-sm font-semibold text-[#538d22]">
-              
+              Tên công ty của Giang Hành (14 chữ, viết liền, không dấu, không viết hoa)
             </label>
 
             <input
               className="w-full rounded-2xl border border-[#dde5b6] bg-[#fdfcf6] px-5 py-4 text-lg font-medium text-[#245501] placeholder:text-[#aad576] outline-none transition duration-200 focus:border-[#73a942] focus:ring-4 focus:ring-[#dde5b6]"
-              placeholder="Nhập mã truy cập"
+              placeholder="xxxxxxxxxxxxxx"
               value={code}
               onChange={(e) => {
                 setCode(e.target.value);
