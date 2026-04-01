@@ -59,6 +59,14 @@ function findClueByCellAndDirection(
   );
 }
 
+function removeVietnameseTones(text: string) {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D");
+}
+
 export default function CrosswordGrid({
   grid,
   userGrid,
@@ -161,19 +169,22 @@ export default function CrosswordGrid({
     setActiveCell({ row, col });
   }
 
-  function handleChange(row: number, col: number, value: string) {
-    const char = value.slice(-1).toUpperCase().replace(/[^A-ZÀ-Ỹ]/g, "");
+function handleChange(row: number, col: number, value: string) {
+  const char = removeVietnameseTones(value)
+    .slice(-1)
+    .toUpperCase()
+    .replace(/[^A-Z]/g, "");
 
-    setUserGrid((prev) => {
-      const next = prev.map((r) => [...r]);
-      next[row][col] = char;
-      return next;
-    });
+  setUserGrid((prev) => {
+    const next = prev.map((r) => [...r]);
+    next[row][col] = char;
+    return next;
+  });
 
-    if (char) {
-      moveToNextCell(row, col);
-    }
+  if (char) {
+    moveToNextCell(row, col);
   }
+}
 
   function handleKeyDown(
     e: React.KeyboardEvent<HTMLInputElement>,

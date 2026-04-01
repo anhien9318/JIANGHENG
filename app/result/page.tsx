@@ -53,6 +53,7 @@ export default function ResultPage() {
 
     if (alreadySaved === "true" || savingRef.current) {
       setSavedToDb(true);
+      setSaveMessage("Thi lại mấy lần rồi?");
       return;
     }
 
@@ -62,7 +63,6 @@ export default function ResultPage() {
         setSaveMessage("");
         savingRef.current = true;
 
-        // chặn gọi lặp trong dev mode
         sessionStorage.setItem("result_saved", "true");
 
         const res = await fetch("/api/save-result", {
